@@ -471,13 +471,28 @@
         let scoreChart = null;
         let currentStudentFilter = 'Semua';
 
-        window.onload = function() {
-            renderDashboard();
-            renderEvents();
-            renderStudents();
-            initChart();
-        };
+       window.onload = function() {
+    initChart();
+    renderDashboard();
+    tarikDataDariGoogleSheet(); // Auto-sync semasa aplikasi dibuka
+};
 
+function tarikDataDariGoogleSheet() {
+    fetch(GOOGLE_SCRIPT_URL)
+        .then(response => response.json())
+        .then(data => {
+            if (data.students && data.events) {
+                // Kemaskini state dengan data terkini dari Google Sheet
+                state.students = data.students;
+                state.events = data.events;
+                
+                // Simpan ke local storage & kemaskini paparan
+                saveData(); 
+                console.log('Data berjaya di-sync dari Google Sheet!');
+            }
+        })
+        .catch(err => console.error('Gagal sync data:', err));
+}
         function saveData() {
             localStorage.setItem('sktj_events', JSON.stringify(state.events));
             localStorage.setItem('sktj_students', JSON.stringify(state.students));
