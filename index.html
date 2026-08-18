@@ -429,32 +429,29 @@
 
     <!-- JS Application Logic -->
     <script>
-
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxGsJZvHMaLpbeV0afzGVPpwwuokPtBrVuXHkohJL6o3cOWyetzDOtIvMt4ZlxYpyA/exec';
 
-function hantarKeGoogleSheet(dataObjek) {
-  fetch(GOOGLE_SCRIPT_URL, {
-    method: 'POST',
-    mode: 'no-cors', // Penting untuk mengelakkan ralat CORS Google
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(dataObjek)
-  })
-  .then(() => alert('Data berjaya dihantar ke Google Sheet!'))
-  .catch(err => console.error('Ralat hantar data:', err));
-}
+        // Fungsi hantar data ke Google Apps Script (POST)
+        function hantarKeGoogleSheet(dataObjek) {
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(dataObjek)
+            })
+            .then(() => console.log('Data berjaya dihantar ke Google Sheet!'))
+            .catch(err => console.error('Ralat hantar data:', err));
+        }
 
-// Contoh Penggunaan bila tambah murid:
-// hantarKeGoogleSheet({ nama: 'Ahmad Ali', kelas: '5 Cemerlang', rumah: 'Merah', markah: 10 });
-
+        // Fungsi tarik data dari Google Apps Script (GET)
         function tarikDataDariGoogleSheet() {
-  fetch(GOOGLE_SCRIPT_URL)
-    .then(response => response.json())
-    .then(data => {
-      console.log('Data dari Google Sheet:', data);
-      // Masukkan data ini ke dalam state.students atau state.events anda
-    })
-    .catch(err => console.error('Ralat tarik data:', err));
-}
+            fetch(GOOGLE_SCRIPT_URL)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Data dari Google Sheet:', data);
+                })
+                .catch(err => console.error('Ralat tarik data:', err));
+        }
         
         let state = {
             isAdmin: false,
@@ -735,10 +732,12 @@ function hantarKeGoogleSheet(dataObjek) {
 
         function closeEventModal() { document.getElementById('addEventModal').classList.add('hidden'); }
 
+        // Dikemaskini: Simpan Acara & Hantar ke Google Sheet
         function saveEvent(e) {
             e.preventDefault();
             const id = document.getElementById('eventId').value;
             const eventObj = {
+                jenis: 'acara',
                 name: document.getElementById('eventName').value,
                 gold: document.getElementById('goldHouse').value,
                 silver: document.getElementById('silverHouse').value,
@@ -755,6 +754,10 @@ function hantarKeGoogleSheet(dataObjek) {
             else state.events.push(eventObj);
 
             saveData();
+            
+            // Hantar data acara ke Google Sheet
+            hantarKeGoogleSheet(eventObj);
+            
             closeEventModal();
         }
 
@@ -826,14 +829,27 @@ function hantarKeGoogleSheet(dataObjek) {
 
         function closeStudentModal() { document.getElementById('addStudentModal').classList.add('hidden'); }
 
+        // Dikemaskini: Simpan Murid & Hantar ke Google Sheet
         function saveStudent(e) {
             e.preventDefault();
+            const studentObj = {
+                jenis: 'murid',
+                nama: document.getElementById('studentName').value.trim(),
+                kelas: document.getElementById('studentClass').value.trim(),
+                rumah: document.getElementById('studentHouse').value
+            };
+
             state.students.push({
-                name: document.getElementById('studentName').value.trim(),
-                class: document.getElementById('studentClass').value.trim(),
-                house: document.getElementById('studentHouse').value
+                name: studentObj.nama,
+                class: studentObj.kelas,
+                house: studentObj.rumah
             });
+
             saveData();
+            
+            // Hantar data murid ke Google Sheet
+            hantarKeGoogleSheet(studentObj);
+            
             closeStudentModal();
         }
 
@@ -864,7 +880,11 @@ function hantarKeGoogleSheet(dataObjek) {
                 if (parts.length >= 3) {
                     const houseFormatted = parts[2].charAt(0).toUpperCase() + parts[2].slice(1).toLowerCase();
                     if (HOUSES.includes(houseFormatted)) {
-                        state.students.push({ name: parts[0], class: parts[1], house: houseFormatted });
+                        const sObj = { name: parts[0], class: parts[1], house: houseFormatted };
+                        state.students.push(sObj);
+                        
+                        // Hantar setiap murid import ke Google Sheet
+                        hantarKeGoogleSheet({ jenis: 'murid', nama: sObj.name, kelas: sObj.class, rumah: sObj.house });
                         addedCount++;
                     }
                 }
@@ -897,6 +917,9 @@ function hantarKeGoogleSheet(dataObjek) {
 
                         if (name && HOUSES.includes(house)) {
                             state.students.push({ name, class: cls, house });
+                            
+                            // Hantar murid import fail ke Google Sheet
+                            hantarKeGoogleSheet({ jenis: 'murid', nama: name, kelas: cls, rumah: house });
                             addedCount++;
                         }
                     }
