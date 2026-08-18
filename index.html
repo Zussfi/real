@@ -429,6 +429,33 @@
 
     <!-- JS Application Logic -->
     <script>
+
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxGsJZvHMaLpbeV0afzGVPpwwuokPtBrVuXHkohJL6o3cOWyetzDOtIvMt4ZlxYpyA/exec';
+
+function hantarKeGoogleSheet(dataObjek) {
+  fetch(GOOGLE_SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors', // Penting untuk mengelakkan ralat CORS Google
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(dataObjek)
+  })
+  .then(() => alert('Data berjaya dihantar ke Google Sheet!'))
+  .catch(err => console.error('Ralat hantar data:', err));
+}
+
+// Contoh Penggunaan bila tambah murid:
+// hantarKeGoogleSheet({ nama: 'Ahmad Ali', kelas: '5 Cemerlang', rumah: 'Merah', markah: 10 });
+
+        function tarikDataDariGoogleSheet() {
+  fetch(GOOGLE_SCRIPT_URL)
+    .then(response => response.json())
+    .then(data => {
+      console.log('Data dari Google Sheet:', data);
+      // Masukkan data ini ke dalam state.students atau state.events anda
+    })
+    .catch(err => console.error('Ralat tarik data:', err));
+}
+        
         let state = {
             isAdmin: false,
             adminPassword: localStorage.getItem('sktj_admin_pass') || 'admin123',
