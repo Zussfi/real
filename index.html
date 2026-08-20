@@ -429,7 +429,7 @@
 
     <!-- JS Application Logic -->
     <script>
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyP96BcD6p0zLEF8PzhOvV1R3lOn8UM4-a0fQ6MVRE08AmeNvV9gbXubB-sBo8Ju6zX/exec';
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6fLfOTzNW1uMAM-yDn6qeOdca1Fj9dgWxLM3VmI-DrpvjUrw3S_nVwecW3N64Ttyn/exec';
 
         // Fungsi hantar data ke Google Apps Script (POST)
         function hantarKeGoogleSheet(dataObjek) {
@@ -443,6 +443,31 @@
             .catch(err => console.error('Ralat hantar data:', err));
         }
 
+        function padamData(nama, jenis) {
+    if (!confirm(`Adakah anda pasti nak padam ${nama}?`)) return;
+
+    // A. Padam di skrin peranti (supaya UI terus hilang, tak perlu tunggu)
+    if (jenis === 'murid') {
+        state.students = state.students.filter(s => s.name !== nama);
+    } else if (jenis === 'acara') {
+        state.events = state.events.filter(e => e.name !== nama);
+    }
+    saveData();
+    renderDashboard();
+
+    // B. Hantar isyarat ke Google Sheet untuk padam di pangkalan data
+    fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+            action: jenis === 'murid' ? 'padam_murid' : 'padam_acara',
+            nama: nama
+        })
+    })
+    .then(res => res.json())
+    .then(data => console.log('Rekod di Google Sheet berjaya dipadam!'))
+    .catch(err => console.error('Ralat padam di Google Sheet:', err));
+}
         // Fungsi tarik data dari Google Apps Script (GET)
         function tarikDataDariGoogleSheet() {
             fetch(GOOGLE_SCRIPT_URL)
