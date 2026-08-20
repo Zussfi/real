@@ -429,7 +429,7 @@
 
     <!-- JS Application Logic -->
     <script>
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby5S_YlLZLBwha-x63cAcUd5Sbmef7l0w6o5fnZSWPuSvNvGeV0DjcnHcIln1h7b_Rt/exec';
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyP96BcD6p0zLEF8PzhOvV1R3lOn8UM4-a0fQ6MVRE08AmeNvV9gbXubB-sBo8Ju6zX/exec';
 
         // Fungsi hantar data ke Google Apps Script (POST)
         function hantarKeGoogleSheet(dataObjek) {
@@ -472,10 +472,24 @@
         let currentStudentFilter = 'Semua';
 
        window.onload = function() {
-    initChart();
-    renderDashboard();
-    tarikDataDariGoogleSheet(); // Auto-sync semasa aplikasi dibuka
+    renderDashboard(); 
+    tarikDataDariGoogleSheet(); // Auto-sync dari Google Sheet bila dibuka
 };
+
+function tarikDataDariGoogleSheet() {
+    fetch(GOOGLE_SCRIPT_URL)
+        .then(response => response.json())
+        .then(data => {
+            if (data.students && data.events) {
+                // Kemaskini simpanan tempatan dengan data terkini Sheet
+                state.students = data.students;
+                state.events = data.events;
+                saveData();
+                renderDashboard(); // Refresh paparan UI
+            }
+        })
+        .catch(err => console.error('Gagal sync data:', err));
+}
 
 function tarikDataDariGoogleSheet() {
     fetch(GOOGLE_SCRIPT_URL)
