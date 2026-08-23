@@ -1004,6 +1004,60 @@ function tarikDataDariGoogleSheet() {
 
             XLSX.writeFile(wb, "Laporan_Sukan_SKTJ_2027.xlsx");
         }
+    }
+
+    // ===================================================
+    // TAMBAHAN: FUNGSI PADAM & SYNC OTOMATIK GOOGLE SHEET
+    // ===================================================
+
+    // 1. Fungsi Padam Data (App & Google Sheet Serentak)
+    function padamData(nama, jenis) {
+        if (!confirm(`Adakah anda pasti ingin memadam ${nama}?`)) return;
+
+        // Padam dalam peranti serta-merta
+        if (jenis === 'murid') {
+            state.students = state.students.filter(s => s.name !== nama);
+        } else if (jenis === 'acara') {
+            state.events = state.events.filter(e => e.name !== nama);
+        }
+        
+        saveData();
+        renderDashboard();
+
+        // Hantar arahan padam ke Google Sheet
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+                action: jenis === 'murid' ? 'padam_murid' : 'padam_acara',
+                nama: nama
+            })
+        })
+        .then(res => res.json())
+        .then(data => console.log('Berjaya dipadam dari Google Sheet'))
+        .catch(err => console.error('Gagal padam di Google Sheet:', err));
+    }
+
+    // 2. Fungsi Tarik Data Terkini dari Google Sheet
+    function tarikDataDariGoogleSheet() {
+        fetch(GOOGLE_SCRIPT_URL)
+            .then(response => response.json())
+            .then(data => {
+                if (data.students && data.events) {
+                    state.students = data.students;
+                    state.events = data.events;
+                    saveData();
+                    renderDashboard();
+                    console.log('Data berjaya di-sync dari Google Sheet!');
+                }
+            })
+            .catch(err => console.error('Gagal sync data:', err));
+    }
+
+    // Auto-sync setiap kali laman/app dibuka
+    window.addEventListener('load', () => {
+        tarikDataDariGoogleSheet();
+    });
     </script>
 
     <!-- Service Worker Registration Script -->
